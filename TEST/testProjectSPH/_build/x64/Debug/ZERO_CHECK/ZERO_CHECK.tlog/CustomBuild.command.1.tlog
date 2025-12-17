@@ -1,0 +1,10 @@
+^C:\USERS\ADMIN\DEV\SPHIMPLEMENTATION\TEST\TESTPROJECTSPH\_BUILD\CMAKEFILES\AA64F7FB46B5F78C2633FA831D336FD8\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH -BC:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/testProjectSPH.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
