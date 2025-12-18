@@ -4,4 +4,10 @@
 /oneTBB
 /eigen-5.0.0
 /_build
-/TEST/testProjectSPH/_build/.vs/testProjectSPH/v17/ipch/AutoPCH/659affaa6b5f68c4/TESTPROJECTSPH.ipch
+/TEST
+/TEST/testProjectSPH
+/tmp/.vs
+/tmp/_build
+/tmp/libs
+/tmp/out
+/tmp/CMakeLists.txt

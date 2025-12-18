@@ -13,9 +13,4 @@
       <UniqueIdentifier>{6A3E9D69-7ACF-3633-AA30-94283725BFA1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="stb_image.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-  </ItemGroup>
 </Project>

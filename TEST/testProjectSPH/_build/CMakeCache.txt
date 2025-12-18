@@ -14,6 +14,9 @@
 # EXTERNAL cache entries
 ########################
 
+//Build shared libraries
+BUILD_SHARED_LIBS:BOOL=ON
+
 //Path to a program.
 CMAKE_AR:FILEPATH=C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.36.32532/bin/Hostx64/x64/lib.exe
 
@@ -192,6 +195,82 @@ CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 CMAKE_VERBOSE_MAKEFILE:BOOL=OFF
 
 //Value Computed by CMake
+GLFW_BINARY_DIR:STATIC=C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/nanogui/ext_build/glfw
+
+//Build the GLFW documentation
+GLFW_BUILD_DOCS:BOOL=OFF
+
+//Build the GLFW example programs
+GLFW_BUILD_EXAMPLES:BOOL=OFF
+
+// 
+GLFW_BUILD_INSTALL:BOOL=OFF
+
+//Build the GLFW test programs
+GLFW_BUILD_TESTS:BOOL=OFF
+
+//Include internals in documentation
+GLFW_DOCUMENT_INTERNALS:BOOL=OFF
+
+//Generate installation target
+GLFW_INSTALL:BOOL=OFF
+
+//Value Computed by CMake
+GLFW_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+GLFW_SOURCE_DIR:STATIC=C:/Users/admin/dev/SPHImplementation/nanogui/ext/glfw
+
+// 
+GLFW_USE_CHDIR:BOOL=OFF
+
+//Force use of high-performance GPU on hybrid systems
+GLFW_USE_HYBRID_HPG:BOOL=OFF
+
+//Takes an empty string or 64. Directory where lib will be installed:
+// lib or lib64
+LIB_SUFFIX:STRING=
+
+//Build NanoGUI example application?
+NANOGUI_BUILD_EXAMPLE:BOOL=ON
+
+//Build a Python plugin for NanoGUI?
+NANOGUI_BUILD_PYTHON:BOOL=OFF
+
+//Build NanoGUI as a shared library?
+NANOGUI_BUILD_SHARED:BOOL=ON
+
+//Install NanoGUI on `make install`?
+NANOGUI_INSTALL:BOOL=ON
+
+//Python version to use for compiling the Python plugin
+NANOGUI_PYTHON_VERSION:STRING=
+
+//Use Glad OpenGL loader library?
+NANOGUI_USE_GLAD:BOOL=ON
+
+//Value Computed by CMake
+NanoGUI_BINARY_DIR:STATIC=C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/nanogui
+
+//Value Computed by CMake
+NanoGUI_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+NanoGUI_SOURCE_DIR:STATIC=C:/Users/admin/dev/SPHImplementation/nanogui
+
+//Path to a program.
+PYTHON_EXECUTABLE:FILEPATH=C:/dev/pyver/py314/python.exe
+
+//Use MSVC runtime library DLL
+USE_MSVC_RUNTIME_LIBRARY_DLL:BOOL=ON
+
+//Path to a file.
+VULKAN_INCLUDE_DIR:PATH=VULKAN_INCLUDE_DIR-NOTFOUND
+
+//Path to a library.
+VULKAN_LIBRARY:FILEPATH=VULKAN_LIBRARY-NOTFOUND
+
+//Value Computed by CMake
 hello_world_BINARY_DIR:STATIC=C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build
 
 //Value Computed by CMake
@@ -199,6 +278,9 @@ hello_world_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
 hello_world_SOURCE_DIR:STATIC=C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH
+
+//Dependencies for the target
+nanogui_LIB_DEPENDS:STATIC=general;opengl32;
 
 //Value Computed by CMake
 testProjectSPH_BINARY_DIR:STATIC=C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build
@@ -276,6 +358,12 @@ CMAKE_GENERATOR_INSTANCE:INTERNAL=C:/Program Files/Microsoft Visual Studio/2022/
 CMAKE_GENERATOR_PLATFORM:INTERNAL=
 //Name of generator toolset.
 CMAKE_GENERATOR_TOOLSET:INTERNAL=
+//Test CMAKE_HAVE_LIBC_PTHREAD
+CMAKE_HAVE_LIBC_PTHREAD:INTERNAL=
+//Have library pthreads
+CMAKE_HAVE_PTHREADS_CREATE:INTERNAL=
+//Have library pthread
+CMAKE_HAVE_PTHREAD_CREATE:INTERNAL=
 //Source directory with the top level CMakeLists.txt file for this
 // project
 CMAKE_HOME_DIRECTORY:INTERNAL=C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH
@@ -296,7 +384,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_MT
 CMAKE_MT-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=1
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=4
 //Platform information initialized
 CMAKE_PLATFORM_INFO_INITIALIZED:INTERNAL=1
 //noop for ranlib
@@ -342,4 +430,14 @@ CMAKE_STATIC_LINKER_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
+//Details about finding PythonInterp
+FIND_PACKAGE_MESSAGE_DETAILS_PythonInterp:INTERNAL=[C:/dev/pyver/py314/python.exe][v3.14()]
+//Details about finding Threads
+FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
+//ADVANCED property for variable: PYTHON_EXECUTABLE
+PYTHON_EXECUTABLE-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: VULKAN_INCLUDE_DIR
+VULKAN_INCLUDE_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: VULKAN_LIBRARY
+VULKAN_LIBRARY-ADVANCED:INTERNAL=1
 

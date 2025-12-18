@@ -1441,3 +1441,171 @@ events:
       Microsoft (R) Incremental Linker Version 14.36.32532.0
       Copyright (C) Microsoft Corporation.  All rights reserved.
 ...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-3.31/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "C:/Program Files/CMake/share/cmake-3.31/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "C:/Program Files/CMake/share/cmake-3.31/Modules/FindThreads.cmake:97 (CHECK_C_SOURCE_COMPILES)"
+      - "C:/Program Files/CMake/share/cmake-3.31/Modules/FindThreads.cmake:163 (_threads_check_libc)"
+      - "C:/Users/admin/dev/SPHImplementation/nanogui/ext/glfw/CMakeLists.txt:60 (find_package)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/CMakeFiles/CMakeScratch/TryCompile-5c8aso"
+      binary: "C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/CMakeFiles/CMakeScratch/TryCompile-5c8aso"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3"
+      CMAKE_MODULE_PATH: "C:/Users/admin/dev/SPHImplementation/nanogui/ext/glfw/CMake/modules"
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/CMakeFiles/CMakeScratch/TryCompile-5c8aso'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_c7f59.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.6.3+07e294721 for .NET Framework
+        ‘Ў®аЄ  ­ з в  17.12.2025 15:56:13.
+        
+        Џа®ҐЄв "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-5c8aso\\cmTC_c7f59.vcxproj" ў г§«Ґ 1 (жҐ«ҐўлҐ ®ЎкҐЄвл Ї® г¬®«з ­Ёо).
+        PrepareForBuild:
+          ‘®§¤ ­ЁҐ Є в «®Ј  "cmTC_c7f59.dir\\Debug\\".
+          ‘®§¤ ­ЁҐ Є в «®Ј  "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-5c8aso\\Debug\\".
+          ‘®§¤ ­ЁҐ Є в «®Ј  "cmTC_c7f59.dir\\Debug\\cmTC_c7f59.tlog\\".
+        InitializeBuildStatus:
+          ‘®§¤ ­ЁҐ "cmTC_c7f59.dir\\Debug\\cmTC_c7f59.tlog\\unsuccessfulbuild", в Є Є Є Ўл«® § ¤ ­® "AlwaysCreate".
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.36.32532\\bin\\HostX64\\x64\\CL.exe /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CMAKE_HAVE_LIBC_PTHREAD /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_c7f59.dir\\Debug\\\\" /Fd"cmTC_c7f59.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-5c8aso\\src.c"
+          ЋЇвЁ¬Ё§ЁагойЁ© Є®¬ЇЁ«пв®а Microsoft (R) C/C++ ўҐабЁЁ 19.36.32532 ¤«п x64
+          src.c
+          (C) Љ®аЇ®а жЁп Њ ©Єа®б®дв (Microsoft Corporation).  ‚бҐ Їа ў  § йЁйҐ­л.
+          cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CMAKE_HAVE_LIBC_PTHREAD /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_c7f59.dir\\Debug\\\\" /Fd"cmTC_c7f59.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-5c8aso\\src.c"
+        C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-5c8aso\\src.c(1,10): fatal  error C1083: ЌҐ г¤ Ґвбп ®вЄалвм д ©« ўЄ«озҐ­ЁҐ: pthread.h: No such file or directory, [C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-5c8aso\\cmTC_c7f59.vcxproj]
+        ‘Ў®аЄ  Їа®ҐЄв  "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-5c8aso\\cmTC_c7f59.vcxproj" § ўҐаиҐ­  (жҐ«ҐўлҐ ®ЎкҐЄвл Ї® г¬®«з ­Ёо) б ®иЁЎЄ®©.
+        
+        ЋиЁЎЄ  бЎ®аЄЁ.
+        
+        "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-5c8aso\\cmTC_c7f59.vcxproj" (жҐ«Ґў®© ®ЎкҐЄв Ї® г¬®«з ­Ёо) (1) ->
+        (–Ґ«Ґў®© ®ЎкҐЄв ClCompile) -> 
+          C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-5c8aso\\src.c(1,10): fatal  error C1083: ЌҐ г¤ Ґвбп ®вЄалвм д ©« ўЄ«озҐ­ЁҐ: pthread.h: No such file or directory, [C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-5c8aso\\cmTC_c7f59.vcxproj]
+        
+            ЏаҐ¤гЇаҐ¦¤Ґ­Ё©: 0
+            ЋиЁЎ®Є: 1
+        
+        Џа®и«® ўаҐ¬Ґ­Ё 00:00:00.93
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-3.31/Modules/CheckLibraryExists.cmake:78 (try_compile)"
+      - "C:/Program Files/CMake/share/cmake-3.31/Modules/FindThreads.cmake:112 (CHECK_LIBRARY_EXISTS)"
+      - "C:/Program Files/CMake/share/cmake-3.31/Modules/FindThreads.cmake:175 (_threads_check_lib)"
+      - "C:/Users/admin/dev/SPHImplementation/nanogui/ext/glfw/CMakeLists.txt:60 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthreads"
+    directories:
+      source: "C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/CMakeFiles/CMakeScratch/TryCompile-frjkqk"
+      binary: "C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/CMakeFiles/CMakeScratch/TryCompile-frjkqk"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3"
+      CMAKE_MODULE_PATH: "C:/Users/admin/dev/SPHImplementation/nanogui/ext/glfw/CMake/modules"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREADS_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/CMakeFiles/CMakeScratch/TryCompile-frjkqk'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_c3d4a.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.6.3+07e294721 for .NET Framework
+        ‘Ў®аЄ  ­ з в  17.12.2025 15:56:14.
+        
+        Џа®ҐЄв "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-frjkqk\\cmTC_c3d4a.vcxproj" ў г§«Ґ 1 (жҐ«ҐўлҐ ®ЎкҐЄвл Ї® г¬®«з ­Ёо).
+        PrepareForBuild:
+          ‘®§¤ ­ЁҐ Є в «®Ј  "cmTC_c3d4a.dir\\Debug\\".
+          ‘®§¤ ­ЁҐ Є в «®Ј  "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-frjkqk\\Debug\\".
+          ‘®§¤ ­ЁҐ Є в «®Ј  "cmTC_c3d4a.dir\\Debug\\cmTC_c3d4a.tlog\\".
+        InitializeBuildStatus:
+          ‘®§¤ ­ЁҐ "cmTC_c3d4a.dir\\Debug\\cmTC_c3d4a.tlog\\unsuccessfulbuild", в Є Є Є Ўл«® § ¤ ­® "AlwaysCreate".
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.36.32532\\bin\\HostX64\\x64\\CL.exe /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_c3d4a.dir\\Debug\\\\" /Fd"cmTC_c3d4a.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-frjkqk\\CheckFunctionExists.c"
+          ЋЇвЁ¬Ё§ЁагойЁ© Є®¬ЇЁ«пв®а Microsoft (R) C/C++ ўҐабЁЁ 19.36.32532 ¤«п x64
+          CheckFunctionExists.c
+          (C) Љ®аЇ®а жЁп Њ ©Єа®б®дв (Microsoft Corporation).  ‚бҐ Їа ў  § йЁйҐ­л.
+          cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_c3d4a.dir\\Debug\\\\" /Fd"cmTC_c3d4a.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-frjkqk\\CheckFunctionExists.c"
+        Link:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.36.32532\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-frjkqk\\Debug\\cmTC_c3d4a.exe" /INCREMENTAL /ILK:"cmTC_c3d4a.dir\\Debug\\cmTC_c3d4a.ilk" /NOLOGO pthreads.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/CMakeFiles/CMakeScratch/TryCompile-frjkqk/Debug/cmTC_c3d4a.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/CMakeFiles/CMakeScratch/TryCompile-frjkqk/Debug/cmTC_c3d4a.lib" /MACHINE:X64  /machine:x64 cmTC_c3d4a.dir\\Debug\\CheckFunctionExists.obj
+        LINK : fatal error LNK1104: ­Ґ г¤ Ґвбп ®вЄалвм д ©« "pthreads.lib" [C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-frjkqk\\cmTC_c3d4a.vcxproj]
+        ‘Ў®аЄ  Їа®ҐЄв  "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-frjkqk\\cmTC_c3d4a.vcxproj" § ўҐаиҐ­  (жҐ«ҐўлҐ ®ЎкҐЄвл Ї® г¬®«з ­Ёо) б ®иЁЎЄ®©.
+        
+        ЋиЁЎЄ  бЎ®аЄЁ.
+        
+        "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-frjkqk\\cmTC_c3d4a.vcxproj" (жҐ«Ґў®© ®ЎкҐЄв Ї® г¬®«з ­Ёо) (1) ->
+        (–Ґ«Ґў®© ®ЎкҐЄв Link) -> 
+          LINK : fatal error LNK1104: ­Ґ г¤ Ґвбп ®вЄалвм д ©« "pthreads.lib" [C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-frjkqk\\cmTC_c3d4a.vcxproj]
+        
+            ЏаҐ¤гЇаҐ¦¤Ґ­Ё©: 0
+            ЋиЁЎ®Є: 1
+        
+        Џа®и«® ўаҐ¬Ґ­Ё 00:00:00.82
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-3.31/Modules/CheckLibraryExists.cmake:78 (try_compile)"
+      - "C:/Program Files/CMake/share/cmake-3.31/Modules/FindThreads.cmake:112 (CHECK_LIBRARY_EXISTS)"
+      - "C:/Program Files/CMake/share/cmake-3.31/Modules/FindThreads.cmake:176 (_threads_check_lib)"
+      - "C:/Users/admin/dev/SPHImplementation/nanogui/ext/glfw/CMakeLists.txt:60 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthread"
+    directories:
+      source: "C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/CMakeFiles/CMakeScratch/TryCompile-synubw"
+      binary: "C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/CMakeFiles/CMakeScratch/TryCompile-synubw"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3"
+      CMAKE_MODULE_PATH: "C:/Users/admin/dev/SPHImplementation/nanogui/ext/glfw/CMake/modules"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREAD_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/CMakeFiles/CMakeScratch/TryCompile-synubw'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_02bb0.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.6.3+07e294721 for .NET Framework
+        ‘Ў®аЄ  ­ з в  17.12.2025 15:56:16.
+        
+        Џа®ҐЄв "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-synubw\\cmTC_02bb0.vcxproj" ў г§«Ґ 1 (жҐ«ҐўлҐ ®ЎкҐЄвл Ї® г¬®«з ­Ёо).
+        PrepareForBuild:
+          ‘®§¤ ­ЁҐ Є в «®Ј  "cmTC_02bb0.dir\\Debug\\".
+          ‘®§¤ ­ЁҐ Є в «®Ј  "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-synubw\\Debug\\".
+          ‘®§¤ ­ЁҐ Є в «®Ј  "cmTC_02bb0.dir\\Debug\\cmTC_02bb0.tlog\\".
+        InitializeBuildStatus:
+          ‘®§¤ ­ЁҐ "cmTC_02bb0.dir\\Debug\\cmTC_02bb0.tlog\\unsuccessfulbuild", в Є Є Є Ўл«® § ¤ ­® "AlwaysCreate".
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.36.32532\\bin\\HostX64\\x64\\CL.exe /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_02bb0.dir\\Debug\\\\" /Fd"cmTC_02bb0.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-synubw\\CheckFunctionExists.c"
+          ЋЇвЁ¬Ё§ЁагойЁ© Є®¬ЇЁ«пв®а Microsoft (R) C/C++ ўҐабЁЁ 19.36.32532 ¤«п x64
+          CheckFunctionExists.c
+          (C) Љ®аЇ®а жЁп Њ ©Єа®б®дв (Microsoft Corporation).  ‚бҐ Їа ў  § йЁйҐ­л.
+          cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_02bb0.dir\\Debug\\\\" /Fd"cmTC_02bb0.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-synubw\\CheckFunctionExists.c"
+        Link:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.36.32532\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-synubw\\Debug\\cmTC_02bb0.exe" /INCREMENTAL /ILK:"cmTC_02bb0.dir\\Debug\\cmTC_02bb0.ilk" /NOLOGO pthread.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/CMakeFiles/CMakeScratch/TryCompile-synubw/Debug/cmTC_02bb0.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/_build/CMakeFiles/CMakeScratch/TryCompile-synubw/Debug/cmTC_02bb0.lib" /MACHINE:X64  /machine:x64 cmTC_02bb0.dir\\Debug\\CheckFunctionExists.obj
+        LINK : fatal error LNK1104: ­Ґ г¤ Ґвбп ®вЄалвм д ©« "pthread.lib" [C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-synubw\\cmTC_02bb0.vcxproj]
+        ‘Ў®аЄ  Їа®ҐЄв  "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-synubw\\cmTC_02bb0.vcxproj" § ўҐаиҐ­  (жҐ«ҐўлҐ ®ЎкҐЄвл Ї® г¬®«з ­Ёо) б ®иЁЎЄ®©.
+        
+        ЋиЁЎЄ  бЎ®аЄЁ.
+        
+        "C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-synubw\\cmTC_02bb0.vcxproj" (жҐ«Ґў®© ®ЎкҐЄв Ї® г¬®«з ­Ёо) (1) ->
+        (–Ґ«Ґў®© ®ЎкҐЄв Link) -> 
+          LINK : fatal error LNK1104: ­Ґ г¤ Ґвбп ®вЄалвм д ©« "pthread.lib" [C:\\Users\\admin\\dev\\SPHImplementation\\TEST\\testProjectSPH\\_build\\CMakeFiles\\CMakeScratch\\TryCompile-synubw\\cmTC_02bb0.vcxproj]
+        
+            ЏаҐ¤гЇаҐ¦¤Ґ­Ё©: 0
+            ЋиЁЎ®Є: 1
+        
+        Џа®и«® ўаҐ¬Ґ­Ё 00:00:00.68
+        
+      exitCode: 1
+...
