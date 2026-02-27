@@ -2,9 +2,9 @@
 
 //#include "C:\Users\admin\dev\SPHImplementation\tmp\libs\nanogui\ext\glad\include\glad\glad.h"
 #include <nanogui/nanogui.h>
-//#include <oneapi/tbb/parallel_for.h>
-//#include <oneapi/tbb/blocked_range.h>
-//#include <oneapi/tbb/concurrent_hash_map.h>
+#include <oneapi/tbb/parallel_for.h>
+#include <oneapi/tbb/blocked_range.h>
+#include <oneapi/tbb/concurrent_hash_map.h>
 #include <iostream>
 #include <vector>
 #include <array>
@@ -14,29 +14,36 @@
 
 using namespace nanogui;
 
-// Constants
-constexpr double H = 16.0;
+
+//
+// Физика работает, но частицы заходят друг на дурга и не растекаются
+//
+
+// ==================== КОНСТАНТЫ (обновлённые) ====================
+
+constexpr int   BOX_WIDTH = 800;
+constexpr int   BOX_HEIGHT = 400;
+
+constexpr double H = 0.1;
 constexpr double HSQ = H * H;
-constexpr double DT = 0.0007;
-constexpr double REST_DENS = 300.0;
-constexpr double GAS_CONST = 2000.0;
-constexpr double VISC = 200.0;
-constexpr double MASS = 2.5;
-constexpr double GX = 0.0, GY = -10.0;
-constexpr double EPS = H;
-constexpr double BOUND_DAMPING = -0.5;
-constexpr double CELL_SIZE = 2 * H;
-constexpr int BOX_WIDTH = 800;
-constexpr int BOX_HEIGHT = 600;
+constexpr double DT = 0.002;        // было 0.005 — уменьшили
+constexpr double REST_DENS = 1000.0;
+constexpr double GAS_CONST = 8000.0;        // было 2000 — сильно увеличено
+constexpr double VISC = 400.0;         // чуть сильнее
+constexpr double MASS = 0.01;
+constexpr double GX = 0.0, GY = -30.0;
+constexpr double EPS = H * 0.5;
+constexpr double CELL_SIZE = H;             // теперь H вместо 2*H
+constexpr double BOUND_DAMPING = 0.85;       // было 0.3
 
-// Precomputed powers of H for constexpr calculations
-constexpr double H_POW_5 = H * H * H * H * H;              // H^5
-constexpr double H_POW_8 = H_POW_5 * H * H * H;            // H^8
+// 2D Kernels (оставляем как было)
+constexpr double H_POW_5 = H * H * H * H * H;
+constexpr double H_POW_8 = H_POW_5 * H * H * H;
+constexpr double H_POW_6 = H_POW_5 * H;
 
-// 2D Kernels - теперь constexpr так как используем предвычисленные степени
 const double POLY6 = 4.0 / (M_PI * H_POW_8);
-const double SPIKY_GRAD = -10.0 / (M_PI * H_POW_5);
-const double VISC_LAP = 40.0 / (M_PI * H_POW_5);
+const double SPIKY_GRAD = 30.0 / (M_PI * H_POW_5);
+const double VISC_LAP = 45.0 / (M_PI * H_POW_6);
 
 struct Vector2 {
     double x = 0.0, y = 0.0;
@@ -79,29 +86,30 @@ public:
     Label* fps_label = nullptr;
 
     SPHScreen() : Screen(Vector2i(BOX_WIDTH, BOX_HEIGHT ), "2D SPH with NanoGUI") {
+
         // Initialize dam break
         std::mt19937 gen(std::random_device{}());
-        std::uniform_real_distribution<double> jitter(-0.5, 0.5);
+        std::uniform_real_distribution<double> jitter(-0.12, 0.12);
 
         // Create a dam break setup - particles in the left part of the container
-        int cols = 30;
-        int rows = 20;
+        int cols = 80;      // было 20
+        int rows = 20;     // было 40
         particles.resize(cols * rows);
-        int idx = 0;
+       
+       
 
         // Fill particles in a rectangular block on the left
-        double start_x = 100.0;
-        double start_y = 200.0;
-        double spacing = H * 0.6;
+        double spacing = H * 82;
+        double start_x = 60.0;            // отступ от левой стенки
 
-        for (int i = 0; i < cols; ++i) {
-            for (int j = 0; j < rows; ++j) {
+        int idx = 0;
+        for (int i = 0; i < cols; ++i) {          // i — по ширине (X)
+            for (int j = 0; j < rows; ++j) {      // j — по высоте (Y)
                 particles[idx].pos = Vector2{
                     start_x + i * spacing + jitter(gen),
-                    start_y + j * spacing + jitter(gen)
+                    30.0 + j * spacing + jitter(gen)   // начинаем чуть выше дна
                 };
-                particles[idx].rho = REST_DENS;
-                idx++;
+                ++idx;
             }
         }
 
@@ -128,27 +136,28 @@ public:
 
     void resetSimulation() {
         std::mt19937 gen(std::random_device{}());
-        std::uniform_real_distribution<double> jitter(-0.5, 0.5);
+        std::uniform_real_distribution<double> jitter(-0.12, 0.12);
 
-        int cols = 30;
-        int rows = 20;
-        double start_x = 100.0;
-        double start_y = 200.0;
-        double spacing = H * 0.6;
+        int cols = 80;      // было 20
+        int rows = 20;     // было 40
+        double spacing = H * 82;
 
-        for (size_t i = 0; i < particles.size(); ++i) {
-            int col = static_cast<int>(i) / rows;
-            int row = static_cast<int>(i) % rows;
+        double start_x = 60.0;
 
-            particles[i].pos = Vector2{
-                start_x + col * spacing + jitter(gen),
-                start_y + row * spacing + jitter(gen)
-            };
+        particles.resize(cols * rows);
 
-            particles[i].vel = Vector2{ 0.0, 0.0 };
-            particles[i].force = Vector2{ 0.0, 0.0 };
-            particles[i].rho = REST_DENS;
-            particles[i].p = 0.0;
+        for (int i = 0; i < cols; ++i) {
+            for (int j = 0; j < rows; ++j) {
+                size_t idx = static_cast<size_t>(i * rows + j);
+                particles[idx].pos = Vector2{
+                    start_x + i * spacing + jitter(gen),
+                    30.0 + j * spacing + jitter(gen)
+                };
+                particles[idx].vel = Vector2{ 0.0, 0.0 };
+                particles[idx].force = Vector2{ 0.0, 0.0 };
+                particles[idx].rho = REST_DENS;
+                particles[idx].p = 0.0;
+            }
         }
         needs_redraw = true;
     }
@@ -195,12 +204,12 @@ public:
     virtual void drawContents() override {
         static auto last_update = glfwGetTime();
         double current_time = glfwGetTime();
-        double delta_time = current_time - last_update;
+        //double delta_time = current_time - last_update;
 
         // Update simulation at fixed time steps
-        if (running && delta_time > 0.016) {
+        if (running /*&& delta_time > 0.016*/) {
             updateSPH();
-            last_update = current_time;
+            //last_update = current_time;
             needs_redraw = true;
         }
 
@@ -268,49 +277,45 @@ private:
     }
 
     void updateSPH() {
-#if 0
-        // Build grid for neighbors
+        // Build grid
         oneapi::tbb::concurrent_hash_map<std::array<int, 2>, std::vector<int>, CellKeyHashCompare> grid;
 
-        // Insert particles into grid
         oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<size_t>(0, particles.size()),
             [&](const oneapi::tbb::blocked_range<size_t>& r) {
                 for (size_t i = r.begin(); i != r.end(); ++i) {
-                    const auto& pos = particles[i].pos;
+                    const auto& pos = particles.at(i).pos;
                     std::array<int, 2> key = {
                         static_cast<int>(std::floor(pos.x / CELL_SIZE)),
                         static_cast<int>(std::floor(pos.y / CELL_SIZE))
                     };
                     oneapi::tbb::concurrent_hash_map<std::array<int, 2>, std::vector<int>, CellKeyHashCompare>::accessor acc;
                     if (grid.insert(acc, key)) {
-                        acc->second.reserve(32);
+                        acc->second.reserve(48);
                     }
                     acc->second.push_back(static_cast<int>(i));
                 }
             });
 
-        // Compute density and pressure
+        // Density + Pressure
         oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<size_t>(0, particles.size()),
             [&](const oneapi::tbb::blocked_range<size_t>& r) {
                 for (size_t i = r.begin(); i != r.end(); ++i) {
-                    auto& p_i = particles[i];
-                    const auto key = std::array<int, 2>{
-                        static_cast<int>(std::floor(p_i.pos.x / CELL_SIZE)),
-                            static_cast<int>(std::floor(p_i.pos.y / CELL_SIZE))
+                    auto& p = particles.at(i);
+                    std::array<int, 2> key = {
+                        static_cast<int>(std::floor(p.pos.x / CELL_SIZE)),
+                        static_cast<int>(std::floor(p.pos.y / CELL_SIZE))
                     };
 
                     double rho = 0.0;
 
-                    // Check neighboring cells
                     for (int dx = -1; dx <= 1; ++dx) {
                         for (int dy = -1; dy <= 1; ++dy) {
                             std::array<int, 2> nkey = { key[0] + dx, key[1] + dy };
                             oneapi::tbb::concurrent_hash_map<std::array<int, 2>, std::vector<int>, CellKeyHashCompare>::const_accessor cacc;
                             if (grid.find(cacc, nkey)) {
                                 for (int j : cacc->second) {
-                                    const auto& p_j = particles[j];
-                                    double dist_sq = (p_i.pos.x - p_j.pos.x) * (p_i.pos.x - p_j.pos.x) +
-                                        (p_i.pos.y - p_j.pos.y) * (p_i.pos.y - p_j.pos.y);
+                                    double dist_sq = (p.pos.x - particles.at(j).pos.x) * (p.pos.x - particles.at(j).pos.x) +
+                                        (p.pos.y - particles.at(j).pos.y) * (p.pos.y - particles.at(j).pos.y);
 
                                     if (dist_sq < HSQ) {
                                         double h_diff = HSQ - dist_sq;
@@ -321,19 +326,20 @@ private:
                         }
                     }
 
-                    p_i.rho = std::max(rho, REST_DENS * 0.1);
-                    p_i.p = GAS_CONST * (p_i.rho - REST_DENS);
+                    p.rho = std::max(rho, REST_DENS * 0.95);
+                    p.p = GAS_CONST * (p.rho - REST_DENS);
+                    if (p.p < 0.0) p.p = 0.0;        // ЗАПРЕЩАЕМ отрицательное давление
                 }
             });
 
-        // Compute forces
+        // Forces
         oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<size_t>(0, particles.size()),
             [&](const oneapi::tbb::blocked_range<size_t>& r) {
                 for (size_t i = r.begin(); i != r.end(); ++i) {
-                    auto& p_i = particles[i];
-                    const auto key = std::array<int, 2>{
+                    auto& p_i = particles.at(i);
+                    std::array<int, 2> key = {
                         static_cast<int>(std::floor(p_i.pos.x / CELL_SIZE)),
-                            static_cast<int>(std::floor(p_i.pos.y / CELL_SIZE))
+                        static_cast<int>(std::floor(p_i.pos.y / CELL_SIZE))
                     };
 
                     Vector2 f_press{ 0.0, 0.0 };
@@ -347,20 +353,19 @@ private:
                                 for (int j : cacc->second) {
                                     if (i == static_cast<size_t>(j)) continue;
 
-                                    const auto& p_j = particles[j];
-                                    double dist_sq = (p_i.pos.x - p_j.pos.x) * (p_i.pos.x - p_j.pos.x) +
-                                        (p_i.pos.y - p_j.pos.y) * (p_i.pos.y - p_j.pos.y);
+                                    const auto& p_j = particles.at(j);
+                                    double dist_sq = (p_i.pos - p_j.pos).magnitudeSquared();
 
                                     if (dist_sq < HSQ && dist_sq > 1e-12) {
                                         double r = std::sqrt(dist_sq);
                                         Vector2 dir = (p_i.pos - p_j.pos) / r;
 
-                                        // Pressure force (corrected kernel)
+                                        // Pressure
                                         double pres_kernel = SPIKY_GRAD * (H - r) * (H - r);
-                                        double shared_pressure = MASS * (p_i.p / (p_i.rho * p_i.rho) + p_j.p / (p_j.rho * p_j.rho));
-                                        f_press += dir * (-shared_pressure * pres_kernel);
+                                        double shared_p = MASS * (p_i.p / (p_i.rho * p_i.rho) + p_j.p / (p_j.rho * p_j.rho));
+                                        f_press += dir * (-shared_p * pres_kernel);
 
-                                        // Viscosity force
+                                        // Viscosity
                                         Vector2 v_diff = p_j.vel - p_i.vel;
                                         double visc_kernel = VISC_LAP * (H - r);
                                         f_visc += v_diff * (VISC * MASS * visc_kernel / p_j.rho);
@@ -370,46 +375,25 @@ private:
                         }
                     }
 
-                    // Gravity force
                     Vector2 f_grav = { GX * p_i.rho, GY * p_i.rho };
                     p_i.force = f_press + f_visc + f_grav;
                 }
             });
 
-        // Integrate motion
+        // Integration + Boundaries
         for (auto& p : particles) {
-            // Acceleration from forces
             Vector2 accel = p.force / p.rho;
 
-            // Semi-implicit Euler integration
             p.vel += accel * DT;
             p.pos += p.vel * DT;
 
-            // Boundary collisions with damping
-            const double damping = 0.3;
+            const double damping = BOUND_DAMPING;   // 0.85
 
-            // Left boundary
-            if (p.pos.x < EPS) {
-                p.vel.x = -p.vel.x * damping;
-                p.pos.x = EPS + 0.001;
-            }
-            // Right boundary
-            if (p.pos.x > BOX_WIDTH - EPS) {
-                p.vel.x = -p.vel.x * damping;
-                p.pos.x = BOX_WIDTH - EPS - 0.001;
-            }
-            // Bottom boundary
-            if (p.pos.y < EPS) {
-                p.vel.y = -p.vel.y * damping;
-                p.pos.y = EPS + 0.001;
-            }
-            // Top boundary
-            if (p.pos.y > BOX_HEIGHT - EPS) {
-                p.vel.y = -p.vel.y * damping;
-                p.pos.y = BOX_HEIGHT - EPS - 0.001;
-            }
+            if (p.pos.x < EPS) { p.vel.x = -p.vel.x * damping; p.pos.x = EPS + 0.001; }
+            if (p.pos.x > BOX_WIDTH - EPS) { p.vel.x = -p.vel.x * damping; p.pos.x = BOX_WIDTH - EPS - 0.001; }
+            if (p.pos.y < EPS) { p.vel.y = -p.vel.y * damping; p.pos.y = EPS + 0.001; }
+            if (p.pos.y > BOX_HEIGHT - EPS) { p.vel.y = -p.vel.y * damping; p.pos.y = BOX_HEIGHT - EPS - 0.001; }
         }
-#endif
     }
 };
 

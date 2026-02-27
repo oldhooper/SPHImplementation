@@ -1,4 +1,0 @@
-﻿  Building Custom Rule C:/Users/admin/dev/SPHImplementation/TEST/testProjectSPH/CMakeLists.txt
-  testProjectSPH.cpp
-C:\Users\admin\dev\SPHImplementation\nanogui\include\nanogui/glutil.h(249,9): error C3861: glUniform1i: идентификатор не найден
-C:\Users\admin\dev\SPHImplementation\TEST\testProjectSPH\testProjectSPH\testProjectSPH.cpp(4,10): fatal  error C1083: Не удается открыть файл включение: oneapi/tbb/parallel_for.h: No such file or directory,
