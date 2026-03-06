@@ -21,20 +21,22 @@ using namespace nanogui;
 
 // ==================== КОНСТАНТЫ (обновлённые) ====================
 
-constexpr int   BOX_WIDTH = 800;
-constexpr int   BOX_HEIGHT = 400;
+constexpr int   BOX_WIDTH = 300;
+constexpr int   BOX_HEIGHT = 600;
 
-constexpr double H = 0.1;
+constexpr double SPACING = 5.0;                 // фиксированное расстояние между частицами
+
+constexpr double H = 8.0; // было 0.1
 constexpr double HSQ = H * H;
-constexpr double DT = 0.002;        // было 0.005 — уменьшили
+constexpr double DT = 0.001;        // чем меньше, тем точнее и медленнее
 constexpr double REST_DENS = 1000.0;
-constexpr double GAS_CONST = 8000.0;        // было 2000 — сильно увеличено
-constexpr double VISC = 400.0;         // чуть сильнее
-constexpr double MASS = 0.01;
-constexpr double GX = 0.0, GY = -30.0;
+constexpr double GAS_CONST = 12000.0;        // тестировал с 12к, 80к, 200к на высоких значениях - замедление программы
+constexpr double VISC = 20.0;         // чуть сильнее
+constexpr double MASS = 25000.0;
+constexpr double GX = 0.0, GY = -100.0; // увеличил с 30, чтобы ускорить падение 
 constexpr double EPS = H * 0.5;
-constexpr double CELL_SIZE = H;             // теперь H вместо 2*H
-constexpr double BOUND_DAMPING = 0.85;       // было 0.3
+constexpr double CELL_SIZE = H /** 1.5*/;             // теперь H вместо 2*H
+constexpr double BOUND_DAMPING = 0.99;       // было 0.3
 
 // 2D Kernels (оставляем как было)
 constexpr double H_POW_5 = H * H * H * H * H;
@@ -92,22 +94,23 @@ public:
         std::uniform_real_distribution<double> jitter(-0.12, 0.12);
 
         // Create a dam break setup - particles in the left part of the container
-        int cols = 80;      // было 20
-        int rows = 20;     // было 40
+        int cols = 50;      // было 20
+        int rows = 30;     // было 90
         particles.resize(cols * rows);
        
        
 
         // Fill particles in a rectangular block on the left
-        double spacing = H * 82;
-        double start_x = 60.0;            // отступ от левой стенки
+        double spacing = SPACING;
+        double start_x = (BOX_WIDTH - cols * spacing) / 2;            // отступ от левой стенки
+        double start_y = 0.0;
 
         int idx = 0;
         for (int i = 0; i < cols; ++i) {          // i — по ширине (X)
             for (int j = 0; j < rows; ++j) {      // j — по высоте (Y)
                 particles[idx].pos = Vector2{
                     start_x + i * spacing + jitter(gen),
-                    30.0 + j * spacing + jitter(gen)   // начинаем чуть выше дна
+                    start_y + j * spacing + jitter(gen)   // начинаем чуть выше дна
                 };
                 ++idx;
             }
@@ -138,11 +141,12 @@ public:
         std::mt19937 gen(std::random_device{}());
         std::uniform_real_distribution<double> jitter(-0.12, 0.12);
 
-        int cols = 80;      // было 20
-        int rows = 20;     // было 40
-        double spacing = H * 82;
+        int cols = 50;      // было 20
+        int rows = 30;     // было 90
+        double spacing = SPACING;
 
-        double start_x = 60.0;
+        double start_x = (BOX_WIDTH - cols * spacing) / 2;
+        double start_y = 0.0;
 
         particles.resize(cols * rows);
 
@@ -151,7 +155,7 @@ public:
                 size_t idx = static_cast<size_t>(i * rows + j);
                 particles[idx].pos = Vector2{
                     start_x + i * spacing + jitter(gen),
-                    30.0 + j * spacing + jitter(gen)
+                    start_y + j * spacing + jitter(gen)
                 };
                 particles[idx].vel = Vector2{ 0.0, 0.0 };
                 particles[idx].force = Vector2{ 0.0, 0.0 };
@@ -202,76 +206,172 @@ public:
     }
 
     virtual void drawContents() override {
-        static auto last_update = glfwGetTime();
+        static double last_time = glfwGetTime();
         double current_time = glfwGetTime();
-        //double delta_time = current_time - last_update;
+        double delta_time = current_time - last_time;
+        last_time = current_time;
 
-        // Update simulation at fixed time steps
-        if (running /*&& delta_time > 0.016*/) {
-            updateSPH();
-            //last_update = current_time;
-            needs_redraw = true;
+        static double accumulator = 0.0;
+        accumulator += delta_time;
+
+        const double step = DT;
+        const int max_steps = 5; // ограничиваем количество шагов за кадр
+        int steps = 0;
+
+        while (accumulator >= step && steps < max_steps) {
+            if (running) {
+                updateSPH();
+            }
+            accumulator -= step;
+            steps++;
         }
 
-        if (needs_redraw) {
-            drawParticles();
-            needs_redraw = false;
+        // Если шагов было слишком много и accumulator всё ещё большой,
+        // можно просто сбросить его (или уменьшить), чтобы не копить ошибку
+        if (accumulator > step * max_steps) {
+            accumulator = 0.0; // или clamp
         }
+
+        drawParticles();
     }
 
 private:
+    bool mouse_active = false;           // зажата ли левая кнопка мыши
+    Vector2 mouse_world_pos;              // позиция курсора в мировых координатах
+    float mouse_radius = 50.0f;           // радиус воздействия
+    float mouse_strength = 300.0f;         // сила воздействия (подбирается)
+
+    float zoom = 1.0f;           // коэффициент увеличения
+    Vector2 offset = {0.0f, 0.0f}; // смещение камеры (панорамирование)
+    Vector2 last_mouse_pos;       // для обработки перетаскивания
+    bool dragging = false;
+
+    Vector2 screenToWorld(const Vector2i& p) {
+        float wx = (p.x() - mSize.x() / 2) / zoom + mSize.x() / 2 - offset.x;
+        float wy = (p.y() - mSize.y() / 2) / zoom + mSize.y() / 2 + offset.y;
+        wy = BOX_HEIGHT - wy; // инверсия Y (так как в мировых координатах Y растёт вверх)
+        return { wx, wy };
+    }
+
+    virtual bool scrollEvent(const Vector2i& p, const Vector2f& rel) override {
+        // Изменяем zoom (колёсико вверх — приближение, вниз — отдаление)
+        float factor = (rel.y() > 0) ? 1.1f : 0.9f;
+        zoom *= factor;
+        // Ограничиваем диапазон zoom
+        const float min_zoom = 0.2f, max_zoom = 5.0f;
+        if (zoom < min_zoom) zoom = min_zoom;
+        if (zoom > max_zoom) zoom = max_zoom;
+        needs_redraw = true;
+        return true;
+    }
+
+
+    virtual bool mouseButtonEvent(const Vector2i& p, int button, bool down, int modifiers) override {
+        // Левая кнопка — взаимодействие с водой
+        if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            mouse_active = down;
+            if (down) {
+                mouse_world_pos = screenToWorld(p);
+            }
+            // Не нужно вызывать updateSPH, просто запросим перерисовку, чтобы показать круг
+            // Если отрисовка и так идёт каждый кадр, можно ничего не делать
+            return true;
+        }
+        // Средняя кнопка — панорамирование (dragging)
+        else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+            dragging = down;
+            last_mouse_pos = Vector2{ (float)p.x(), (float)p.y() };
+            return true;
+        }
+        return Screen::mouseButtonEvent(p, button, down, modifiers);
+    }
+
+    virtual bool mouseMotionEvent(const Vector2i& p, const Vector2i& rel, int button, int modifiers) override {
+        // Если зажата левая — обновляем позицию взаимодействия
+        if (mouse_active) {
+            mouse_world_pos = screenToWorld(p);
+            needs_redraw = true;
+            return true;
+        }
+        // Если зажата средняя — панорамируем сцену
+        if (dragging) {
+            // Смещение камеры в мировых координатах (с учётом текущего zoom)
+            offset.x += (p.x() - last_mouse_pos.x) / zoom;
+            offset.y -= (p.y() - last_mouse_pos.y) / zoom; // минус, так как Y экрана направлен вниз
+            last_mouse_pos = Vector2{ (float)p.x(), (float)p.y() };
+            needs_redraw = true;
+            return true;
+        }
+        return Screen::mouseMotionEvent(p, rel, button, modifiers);
+    }
+
     void drawParticles() {
-        // Rendering with NanoVG
         NVGcontext* vg = mNVGContext;
         nvgBeginFrame(vg, mSize.x(), mSize.y(), 1.0f);
 
-        // Background
+        // Применяем трансформации камеры (zoom и pan)
+        nvgTranslate(vg, mSize.x() / 2, mSize.y() / 2);
+        nvgScale(vg, zoom, zoom);
+        nvgTranslate(vg, -mSize.x() / 2 + offset.x, -mSize.y() / 2 - offset.y);
+
+        // Фон
         nvgBeginPath(vg);
-        nvgRect(vg, 0, 0, mSize.x(), mSize.y());
+        nvgRect(vg, 0, 0, BOX_WIDTH, BOX_HEIGHT);
         nvgFillColor(vg, nvgRGBA(20, 20, 30, 255));
         nvgFill(vg);
 
-        // Draw boundaries
+        // Границы контейнера
         nvgBeginPath(vg);
-        nvgRect(vg, 0, 0, mSize.x(), mSize.y());
+        nvgRect(vg, 0, 0, BOX_WIDTH, BOX_HEIGHT);
         nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 100));
-        nvgStrokeWidth(vg, 2.0f);
+        nvgStrokeWidth(vg, 2.0f / zoom); // постоянная толщина линии
         nvgStroke(vg);
 
-        // Particles
-        for (const auto& p : particles) {
-            float radius = 3.5f;
 
-            // Color based on pressure
+        //
+        // Проверить в отладчике расчет давления 
+        //
+
+
+        // Частицы
+        float particle_radius = 3.0f; // визуальный радиус (spacing/2)
+        for (const auto& p : particles) {
             double pressure_ratio = std::min(1.0, std::abs(p.p) / (GAS_CONST * REST_DENS));
             int red = static_cast<int>(255 * pressure_ratio);
             int green = static_cast<int>(255 * (1.0 - pressure_ratio * 0.5));
             int blue = static_cast<int>(255 * (1.0 - pressure_ratio));
 
-            // Draw particle
             nvgBeginPath(vg);
-            nvgCircle(vg, p.pos.x, BOX_HEIGHT - p.pos.y, radius);
+            nvgCircle(vg, p.pos.x, BOX_HEIGHT - p.pos.y, particle_radius);
 
-            // Create gradient
             NVGpaint paint = nvgRadialGradient(vg,
                 p.pos.x,
                 BOX_HEIGHT - p.pos.y,
                 0,
-                radius * 1.5f,
+                particle_radius * 1.5f,
                 nvgRGBA(red, green, blue, 220),
                 nvgRGBA(red / 3, green / 3, blue / 3, 50));
-
             nvgFillPaint(vg, paint);
             nvgFill(vg);
         }
 
-        // Draw info text
+        // Область взаимодействия мыши
+        if (mouse_active) {
+            nvgBeginPath(vg);
+            nvgCircle(vg, mouse_world_pos.x, BOX_HEIGHT - mouse_world_pos.y, mouse_radius);
+            nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 128));
+            nvgStrokeWidth(vg, 2.0f / zoom);
+            nvgStroke(vg);
+        }
+
+        // Сбрасываем трансформации для текста (он рисуется в экранных координатах)
+        nvgResetTransform(vg);
         nvgFontSize(vg, 14.0f);
         nvgFontFace(vg, "sans");
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 200));
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
         nvgText(vg, 10, 10, "SPH Fluid Simulation", nullptr);
-        nvgText(vg, 10, 30, "Controls: SPACE=Pause, R=Reset, ESC=Exit", nullptr);
+        nvgText(vg, 10, 30, "Controls: SPACE=Pause, R=Reset, ESC=Exit | Left mouse=repel, Middle=drag, Wheel=zoom", nullptr);
 
         nvgEndFrame(vg);
     }
@@ -295,6 +395,12 @@ private:
                     acc->second.push_back(static_cast<int>(i));
                 }
             });
+
+
+
+//
+// Проверить в отладчике расчет давления и сил отталкивания/притяжения для частиц
+//
 
         // Density + Pressure
         oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<size_t>(0, particles.size()),
@@ -363,7 +469,7 @@ private:
                                         // Pressure
                                         double pres_kernel = SPIKY_GRAD * (H - r) * (H - r);
                                         double shared_p = MASS * (p_i.p / (p_i.rho * p_i.rho) + p_j.p / (p_j.rho * p_j.rho));
-                                        f_press += dir * (-shared_p * pres_kernel);
+                                        f_press += dir * (shared_p * pres_kernel);
 
                                         // Viscosity
                                         Vector2 v_diff = p_j.vel - p_i.vel;
@@ -383,6 +489,16 @@ private:
         // Integration + Boundaries
         for (auto& p : particles) {
             Vector2 accel = p.force / p.rho;
+
+            if (mouse_active) {
+                Vector2 d = p.pos - mouse_world_pos;
+                double dist = d.magnitude();
+                if (dist < mouse_radius && dist > 1e-6) {
+                    double factor = mouse_strength * (1.0 - dist / mouse_radius);
+                    Vector2 dir = d.normalized();
+                    accel += dir * factor;
+                }
+            }
 
             p.vel += accel * DT;
             p.pos += p.vel * DT;
