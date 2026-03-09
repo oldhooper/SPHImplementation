@@ -19,24 +19,33 @@ using namespace nanogui;
 // Физика работает, но частицы заходят друг на дурга и не растекаются
 //
 
-// ==================== КОНСТАНТЫ (обновлённые) ====================
+// ==================== КОНСТАНТЫ ====================
 
 constexpr int   BOX_WIDTH = 300;
 constexpr int   BOX_HEIGHT = 600;
 
-constexpr double SPACING = 5.0;                 // фиксированное расстояние между частицами
+constexpr double SPACING = 5.0;         // фиксированное расстояние между частицами
 
-constexpr double H = 8.0; // было 0.1
+constexpr double H = 8.0;           // было 0.1
 constexpr double HSQ = H * H;
-constexpr double DT = 0.001;        // чем меньше, тем точнее и медленнее
+
+
+//Можно потестировать ограничение на шаги -> возможно повлияет на фпс и плавность анимации
+constexpr double DT = 0.001;            // чем меньше, тем точнее и медленнее
+constexpr int MAX_STEPS = 10;            // ограничение шагов на кадр drawContext
+
 constexpr double REST_DENS = 1000.0;
 constexpr double GAS_CONST = 12000.0;        // тестировал с 12к, 80к, 200к на высоких значениях - замедление программы
 constexpr double VISC = 20.0;         // чуть сильнее
 constexpr double MASS = 25000.0;
 constexpr double GX = 0.0, GY = -100.0; // увеличил с 30, чтобы ускорить падение 
-constexpr double EPS = H * 0.5;
-constexpr double CELL_SIZE = H /** 1.5*/;             // теперь H вместо 2*H
+
+
+
+constexpr double EPS = H; //отвечает за отступ от границ резервуара
+constexpr double CELL_SIZE = H;             // теперь H вместо 1.5*H
 constexpr double BOUND_DAMPING = 0.99;       // было 0.3
+
 
 // 2D Kernels (оставляем как было)
 constexpr double H_POW_5 = H * H * H * H * H;
@@ -46,6 +55,8 @@ constexpr double H_POW_6 = H_POW_5 * H;
 const double POLY6 = 4.0 / (M_PI * H_POW_8);
 const double SPIKY_GRAD = 30.0 / (M_PI * H_POW_5);
 const double VISC_LAP = 45.0 / (M_PI * H_POW_6);
+
+
 
 struct Vector2 {
     double x = 0.0, y = 0.0;
@@ -137,6 +148,7 @@ public:
         glfwSetTime(0.0);
     }
 
+    //Отвечает за перезапуск симуляции 
     void resetSimulation() {
         std::mt19937 gen(std::random_device{}());
         std::uniform_real_distribution<double> jitter(-0.12, 0.12);
@@ -166,6 +178,7 @@ public:
         needs_redraw = true;
     }
 
+    //Хэндлер нажатий на клавиатуру
     virtual bool keyboardEvent(int key, int scancode, int action, int modifiers) override {
         if (Screen::keyboardEvent(key, scancode, action, modifiers)) return true;
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
@@ -184,6 +197,7 @@ public:
         return false;
     }
 
+    //Отрисовщик сцены
     virtual void draw(NVGcontext* ctx) override {
         static auto last_time = std::chrono::high_resolution_clock::now();
         static int frame_count = 0;
@@ -205,6 +219,7 @@ public:
         Screen::draw(ctx);
     }
 
+    //Отрисовщик частиц
     virtual void drawContents() override {
         static double last_time = glfwGetTime();
         double current_time = glfwGetTime();
@@ -215,7 +230,7 @@ public:
         accumulator += delta_time;
 
         const double step = DT;
-        const int max_steps = 5; // ограничиваем количество шагов за кадр
+        const int max_steps = MAX_STEPS; // ограничиваем количество шагов за кадр
         int steps = 0;
 
         while (accumulator >= step && steps < max_steps) {
@@ -268,7 +283,7 @@ private:
 
     virtual bool mouseButtonEvent(const Vector2i& p, int button, bool down, int modifiers) override {
         // Левая кнопка — взаимодействие с водой
-        if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if (button == GLFW_MOUSE_BUTTON_RIGHT) {
             mouse_active = down;
             if (down) {
                 mouse_world_pos = screenToWorld(p);
@@ -278,7 +293,7 @@ private:
             return true;
         }
         // Средняя кнопка — панорамирование (dragging)
-        else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+        else if (button == GLFW_MOUSE_BUTTON_LEFT) {
             dragging = down;
             last_mouse_pos = Vector2{ (float)p.x(), (float)p.y() };
             return true;
@@ -333,7 +348,7 @@ private:
         //
 
 
-        // Частицы
+        // Отрисовка частиц (цвет зависит от давления)
         float particle_radius = 3.0f; // визуальный радиус (spacing/2)
         for (const auto& p : particles) {
             double pressure_ratio = std::min(1.0, std::abs(p.p) / (GAS_CONST * REST_DENS));
@@ -371,7 +386,7 @@ private:
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 200));
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
         nvgText(vg, 10, 10, "SPH Fluid Simulation", nullptr);
-        nvgText(vg, 10, 30, "Controls: SPACE=Pause, R=Reset, ESC=Exit | Left mouse=repel, Middle=drag, Wheel=zoom", nullptr);
+        nvgText(vg, 10, 30, "Controls: SPACE=Pause, R=Reset, ESC=Exit | Right mouse=repel, Left=drag, Wheel=zoom", nullptr);
 
         nvgEndFrame(vg);
     }
@@ -434,7 +449,7 @@ private:
 
                     p.rho = std::max(rho, REST_DENS * 0.95);
                     p.p = GAS_CONST * (p.rho - REST_DENS);
-                    if (p.p < 0.0) p.p = 0.0;        // ЗАПРЕЩАЕМ отрицательное давление
+                    if (p.p < 0.0) p.p = 0.0;        // запрещаем отрицательное давление
                 }
             });
 
@@ -505,10 +520,22 @@ private:
 
             const double damping = BOUND_DAMPING;   // 0.85
 
-            if (p.pos.x < EPS) { p.vel.x = -p.vel.x * damping; p.pos.x = EPS + 0.001; }
-            if (p.pos.x > BOX_WIDTH - EPS) { p.vel.x = -p.vel.x * damping; p.pos.x = BOX_WIDTH - EPS - 0.001; }
-            if (p.pos.y < EPS) { p.vel.y = -p.vel.y * damping; p.pos.y = EPS + 0.001; }
-            if (p.pos.y > BOX_HEIGHT - EPS) { p.vel.y = -p.vel.y * damping; p.pos.y = BOX_HEIGHT - EPS - 0.001; }
+            if (p.pos.x < EPS) { 
+                p.vel.x = -p.vel.x * damping; 
+                p.pos.x = EPS + 0.001; 
+            }
+            if (p.pos.x > BOX_WIDTH - EPS) { 
+                p.vel.x = -p.vel.x * damping; 
+                p.pos.x = BOX_WIDTH - EPS - 0.001; 
+            }
+            if (p.pos.y < EPS) { 
+                p.vel.y = -p.vel.y * damping; 
+                p.pos.y = EPS + 0.001; 
+            }
+            if (p.pos.y > BOX_HEIGHT - EPS) { 
+                p.vel.y = -p.vel.y * damping; 
+                p.pos.y = BOX_HEIGHT - EPS - 0.001; 
+            }
         }
     }
 };
