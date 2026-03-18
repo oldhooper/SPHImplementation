@@ -24,12 +24,12 @@ using namespace nanogui;
 constexpr int   BOX_WIDTH = 300;
 constexpr int   BOX_HEIGHT = 600;
 
-constexpr int   COLUMNS_NUM = 50;
+constexpr int   COLUMNS_NUM = 17;
 constexpr int   ROWS_NUM = 100;
 
-constexpr double SPACING = 5.0;         // фиксированное расстояние между частицами
+constexpr double SPACING = 2.0;         // фиксированное расстояние между частицами 
 
-constexpr double H = 8.0;           // было 0.1
+constexpr double H = 20.0;           // было 0.1
 constexpr double HSQ = H * H;
 
 
@@ -38,10 +38,10 @@ constexpr double DT = 0.001;            // чем меньше, тем точн�
 constexpr int MAX_STEPS = 10;            // ограничение шагов на кадр drawContext
 
 constexpr double REST_DENS = 1000.0;
-constexpr double GAS_CONST = 2000000.0;        // тестировал с 12к, 80к, 200к на высоких значениях - замедление программы
-constexpr double VISC = 3.0;         // уменьшил с 20 до 3
-constexpr double MASS = 25000.0;        // расчитывается по формуле rest_density*spacing**2, для стабильности понизим 
-constexpr double GX = 0.0, GY = -100.0; // было 30 
+constexpr double GAS_CONST = 1000000.0;        // тестировал с 12к, 80к, 200к, 1m на высоких значениях - замедление программы
+constexpr double VISC = 30.0;         // уменьшил с 20 до 3
+constexpr double MASS = 50.0;        // (было 25000) расчитывается по формуле rest_density*spacing**2, для стабильности понизим 
+constexpr double GX = 0.0, GY = -1000.0; // было 30 
 
 
 
@@ -503,7 +503,9 @@ private:
                             }
                         }
                     }
-
+                    if (i == 58) {
+                        std::cout << "Fp={" << f_press.x << ";" << f_press.y << "}" << " Fv={" << f_visc.x << ";" << f_visc.y << "}" << std::endl;
+                    }
                     Vector2 f_grav = { GX * p_i.rho, GY * p_i.rho };
                     p_i.force = f_press + f_visc + f_grav;
                 }
