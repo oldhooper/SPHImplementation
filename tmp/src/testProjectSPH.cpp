@@ -272,6 +272,12 @@ private:
     }
 
     virtual bool scrollEvent(const Vector2i& p, const Vector2f& rel) override {
+        
+        //Базовая логика
+        if (Screen::scrollEvent(p, rel)) {
+            return true;
+        }
+        
         // Изменяем zoom (колёсико вверх — приближение, вниз — отдаление)
         float factor = (rel.y() > 0) ? 1.1f : 0.9f;
         zoom *= factor;
@@ -283,8 +289,13 @@ private:
         return true;
     }
 
-
     virtual bool mouseButtonEvent(const Vector2i& p, int button, bool down, int modifiers) override {
+        
+        //Базовая логика
+        if (Screen::mouseButtonEvent(p, button, down, modifiers)) {
+            return true;
+        }
+        
         // Левая кнопка — взаимодействие с водой
         if (button == GLFW_MOUSE_BUTTON_RIGHT) {
             mouse_active = down;
@@ -305,12 +316,19 @@ private:
     }
 
     virtual bool mouseMotionEvent(const Vector2i& p, const Vector2i& rel, int button, int modifiers) override {
+        
+        //Базовая логика
+        if (Screen::mouseMotionEvent(p, rel, button, modifiers)) {
+            return true;
+        }
+
         // Если зажата левая — обновляем позицию взаимодействия
         if (mouse_active) {
             mouse_world_pos = screenToWorld(p);
             needs_redraw = true;
             return true;
         }
+
         // Если зажата средняя — панорамируем сцену
         if (dragging) {
             // Смещение камеры в мировых координатах (с учётом текущего zoom)
@@ -503,10 +521,13 @@ private:
                             }
                         }
                     }
-                    if (i == 58) {
+                    if (i == 100) {
                         std::cout << "Fp={" << f_press.x << ";" << f_press.y << "}" << " Fv={" << f_visc.x << ";" << f_visc.y << "}" << std::endl;
                     }
                     Vector2 f_grav = { GX * p_i.rho, GY * p_i.rho };
+
+                    
+
                     p_i.force = f_press + f_visc + f_grav;
                 }
             });
