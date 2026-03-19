@@ -30,7 +30,7 @@ constexpr int   ROWS_NUM = 100;
 constexpr double SPACING = 2.0;         // фиксированное расстояние между частицами 
 
 constexpr double H = 20.0;           // было 0.1
-constexpr double HSQ = H * H;
+
 
 
 //Можно потестировать ограничение на шаги -> возможно повлияет на фпс и плавность анимации
@@ -46,18 +46,9 @@ constexpr double GX = 0.0, GY = -1000.0; // было 30
 
 
 constexpr double EPS = H; //отвечает за отступ от границ резервуара
-constexpr double CELL_SIZE = H*2;             // теперь 2H вместо H, для того чтобы не терялись соседи
 constexpr double BOUND_DAMPING = 0.99;       // было 0.3
 
 
-// 2D Kernels (оставляем как было)
-constexpr double H_POW_5 = H * H * H * H * H;
-constexpr double H_POW_8 = H_POW_5 * H * H * H;
-//constexpr double H_POW_6 = H_POW_5 * H;
-
-const double POLY6 = 4.0 / (M_PI * H_POW_8); 
-const double SPIKY_GRAD = -10.0 / (M_PI * H_POW_5);        // изменил коэф с 30 на -10
-const double VISC_LAP = 40.0 / (M_PI * H_POW_5);            // изменил коэф с 45 на 40 и степень с 6 на 5
 
 
 
@@ -100,6 +91,29 @@ public:
     bool running = true;
     bool needs_redraw = true;
     Label* fps_label = nullptr;
+    //Label* grav_label = nullptr;
+
+    double param_spacing = SPACING;
+    double param_h = H;
+    double param_dt = DT;
+    double param_gas_c = GAS_CONST;
+    double param_visc = VISC;
+    double param_mass = MASS;
+    double param_gy = GY;
+
+    double HSQ = H * H;
+    double CELL_SIZE = H * 2;             // теперь 2H вместо H, для того чтобы не терялись соседи
+
+
+    // 2D Kernels (оставляем как было)
+    double H_POW_5 = param_h * param_h * param_h * param_h * param_h;
+    double H_POW_8 = H_POW_5 * param_h * param_h * param_h;
+    //constexpr double H_POW_6 = H_POW_5 * H;
+
+    const double POLY6 = 4.0 / (M_PI * H_POW_8);
+    const double SPIKY_GRAD = -10.0 / (M_PI * H_POW_5);        // изменил коэф с 30 на -10
+    const double VISC_LAP = 40.0 / (M_PI * H_POW_5);            // изменил коэф с 45 на 40 и степень с 6 на 5
+
 
     SPHScreen() : Screen(Vector2i(BOX_WIDTH, BOX_HEIGHT ), "2D SPH with NanoGUI") {
 
@@ -135,6 +149,29 @@ public:
         window->setPosition(Vector2i(10, 10));
         window->setLayout(new GroupLayout());
 
+        new Label(window, "Parameters", "sans-bold");
+
+        auto add_param = [&](const std::string& name, double& value, double minv, double maxv, double step = 0.1) {
+            Widget* row = new Widget(window);
+            row->setLayout(new BoxLayout(Orientation::Horizontal, Alignment::Middle, 6, 6));
+
+            new Label(row, name + ":", "sans");
+            FloatBox<double>* box = new FloatBox <double>(row, value);
+            box->setMinValue(minv);
+            box->setMaxValue(maxv);
+            box->setValueIncrement(step);
+            box->setEditable(true);
+            box->setCallback([&value](double v) {value = v; });
+        };
+        //double minsp = 0.5, maxsp = 10.0, stepsp = 0.1;
+        add_param("Spacing", param_spacing, 0.5, 10.0, 0.1);
+        add_param("Sm. length", param_h, 5.0, 60.0, 1.0);
+        add_param("Time step", param_dt, 0.0001, 0.01, 0.0001);
+        add_param("Gas const", param_gas_c, 1e4, 5e6, 1e4);
+        add_param("Viscosity", param_visc, 0.1, 200.0, 1.0);
+        add_param("P. mass", param_mass, 1.0, 500.0, 5.0);
+        add_param("Grav. Y", param_gy, -5000.0, 0.0, 100.0);
+
         Button* btn_reset = new Button(window, "Reset Simulation");
         btn_reset->setCallback([this]() { resetSimulation(); });
 
@@ -145,6 +182,8 @@ public:
             });
 
         fps_label = new Label(window, "FPS: 0");
+
+        //grav_label = new Label(window, "Grav. accel Y: 0.0");
 
         performLayout();
 
@@ -158,7 +197,42 @@ public:
 
         int cols = COLUMNS_NUM;      // было 20
         int rows = ROWS_NUM;     // было 90
-        double spacing = SPACING;
+
+        //Validation
+        if (param_h < 1.2 * param_spacing) {
+            std::cerr << "Warning: H too small relative to spacing. Adjusting to 1.5 * spacing\n";
+            param_h = 1.5 * param_spacing;
+        }
+        if (param_h > 3.5 * param_spacing) {
+            std::cerr << "Warning: H too large. Adjusting to 2.5 * spacing\n";
+            param_h = 2.5 * param_spacing;
+        }
+
+        param_dt = std::clamp(param_dt, 1e-5, 0.02);
+
+        param_gas_c = std::clamp(param_gas_c, 1000.0, 1e8);
+
+        param_visc = std::clamp(param_visc, 0.0, 1000.0);
+
+        param_mass = std::clamp(param_mass, 0.1, 20000.0);
+
+        param_gy = std::clamp(param_gy, -15000.0, 0.0);
+
+        //Recalc of params
+        
+        double spacing = param_spacing;
+        double h_local = param_h;
+
+        HSQ = param_h * param_h;
+
+        CELL_SIZE = 2.0 * param_h;
+
+        double h_pow_5 = h_local * h_local * h_local * h_local * h_local;
+        double h_pow_8 = h_pow_5 * h_local * h_local * h_local;
+
+        const double poly6 = 4.0 / (M_PI * h_pow_8);
+        const double spiky_grad = -10.0 / (M_PI * h_pow_5);
+        const double visc_lap = 40.0 / (M_PI * h_pow_5);
 
         double start_x = (BOX_WIDTH - cols * spacing) / 2;
         double start_y = 0.0;
@@ -526,7 +600,10 @@ private:
                     }
                     Vector2 f_grav = { GX * p_i.rho, GY * p_i.rho };
 
-                    
+                    /*if (i == 100 && grav_label) {
+                        Vector2 f_grav = { 0, param_gy * particles[i].rho };
+                        grav_label->setCaption("f_gr on #100: " + std::to_string(f_grav.y) + " N");
+                    }*/
 
                     p_i.force = f_press + f_visc + f_grav;
                 }
