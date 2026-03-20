@@ -644,37 +644,6 @@ private:
 
                     }
 
-                    //for (int dx = -1; dx <= 1; ++dx) {
-                    //    for (int dy = -1; dy <= 1; ++dy) {
-                    //        std::array<int, 2> nkey = { key[0] + dx, key[1] + dy };
-                    //        oneapi::tbb::concurrent_hash_map<std::array<int, 2>, std::vector<int>, CellKeyHashCompare>::const_accessor cacc;
-                    //        if (grid.find(cacc, nkey)) {
-                    //            for (int j : cacc->second) {
-                    //                if (i == static_cast<size_t>(j)) continue;
-
-                    //                const auto& p_j = particles.at(j);
-                    //                double dist_sq = (p_i.pos - p_j.pos).magnitudeSquared();
-
-                    //                double distance_evc = std::sqrt((p_i.pos.x - p_j.pos.x) * (p_i.pos.x - p_j.pos.x) + (p_i.pos.y - p_j.pos.y) * (p_i.pos.y - p_j.pos.y));
-
-                    //                if (distance_evc < HSQ && distance_evc > 1e-12) {
-                    //                    double r = std::sqrt(dist_sq);
-                    //                    Vector2 dir = (p_i.pos - p_j.pos) / r;
-
-                    //                    // Pressure
-                    //                    double pres_kernel = SPIKY_GRAD * (H - r) * (H - r);
-                    //                    double shared_p = MASS * (p_i.p / (p_i.rho * p_i.rho) + p_j.p / (p_j.rho * p_j.rho));
-                    //                    f_press += dir * (-shared_p * pres_kernel);
-
-                    //                    // Viscosity
-                    //                    Vector2 v_diff = p_j.vel - p_i.vel;
-                    //                    double visc_kernel = VISC_LAP * (H - r);
-                    //                    f_visc += v_diff * (VISC * MASS * visc_kernel / p_j.rho);
-                    //                }
-                    //            }
-                    //        }
-                    //    }
-                    //}
                     if (i == 100) {
                         std::cout << "Fp={" << f_press.x << ";" << f_press.y << "}" << " Fv={" << f_visc.x << ";" << f_visc.y << "}" << std::endl;
                     }
