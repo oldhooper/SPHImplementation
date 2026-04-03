@@ -21,7 +21,7 @@ constexpr int    BOX_H = 600;
 
 constexpr int    DEF_COLS = 18;
 constexpr int    DEF_ROWS = 25;
-constexpr double DEF_SPACING = 2.0;
+constexpr double DEF_SPACING = 10.0;
 constexpr double DEF_H = 6.0;   // ≈ 2.67 × SPACING
 constexpr double DEF_DT = 0.008;  // CFL: H/(2c) = 16/(2×283) ≈ 0.028 → use 0.008
 constexpr int    DEF_MSTEPS = 4;
