@@ -17,23 +17,32 @@ using namespace nanogui;
 
 
 
-constexpr int    BOX_W = 300;
-constexpr int    BOX_H = 600;
+constexpr int    BOX_W = 1200;
+constexpr int    BOX_H = 800;
+constexpr int    PANEL_W = 210;  // width of each control panel column
+constexpr int    WIN_W = BOX_W + PANEL_W * 2 + 24; // box + two panels + margins
+constexpr int    WIN_H = BOX_H;
 
 // Defaults 
-constexpr int    DEF_COLS = 25;
+constexpr int    DEF_COLS = 100;
 constexpr int    DEF_ROWS = 100;
 constexpr double DEF_SPACING = 10.0;
-constexpr double DEF_H = 6.0;   // ≈ 2.67 × SPACING
-constexpr double DEF_DT = 0.0008;  // CFL: H/(2c) = 16/(2×283) ≈ 0.028 → use 0.008
+constexpr double DEF_H = 6.0;
+constexpr double DEF_DT = 0.0008;
 constexpr int    DEF_MSTEPS = 4;
 constexpr double REST_DENS = 1000.0;
-constexpr double DEF_GAS = 8e4;    // softer fluid → fewer springy oscillations
+constexpr double DEF_GAS = 8e4;
 constexpr double DEF_VISC = 50.0;
 constexpr double DEF_GY = -9800.0;
-constexpr double DEF_DAMP = 0.992;  // global velocity decay per physics step
-constexpr double EPS = 2.0;    // wall inset
-constexpr double WALL_DAMP = 0.1;    // fraction of normal velocity kept after bounce
+constexpr double DEF_DAMP = 0.992;
+constexpr double EPS = 2.0;
+constexpr double WALL_DAMP = 0.1;
+
+// Default cone obstacle params
+constexpr double DEF_CONE_CX_PCT = 0.50;
+constexpr double DEF_CONE_TY_PCT = 0.82;
+constexpr double DEF_CONE_HW = 55.0;
+constexpr double DEF_CONE_HT = 90.0;
 
 // v2
 
@@ -217,49 +226,30 @@ public:
 
     // cone obstacle 
     ConeObstacle cone;
+    double cone_cx_pct = DEF_CONE_CX_PCT;
+    double cone_ty_pct = DEF_CONE_TY_PCT;
+    double cone_hw = DEF_CONE_HW;
+    double cone_ht = DEF_CONE_HT;
+    bool   cone_enable = true;
 
-    SPHScreen() : Screen(Vector2i(BOX_W, BOX_H), "2D SPH Fluid") {
+    // metrics labels (right panel)
+    Label* lbl_avg_rho = nullptr;
+    Label* lbl_avg_nb = nullptr;
+    Label* lbl_max_vel = nullptr;
 
-        Window* win = new Window(this, "Controls");
-        win->setPosition(Vector2i(8, 8));
-        win->setLayout(new GroupLayout());
+    SPHScreen() : Screen(Vector2i(WIN_W, WIN_H), "2D SPH Fluid") {
 
-        // Init 
-        new Label(win, "Init", "sans-bold");
-
+        // Helper: horizontal row inside a panel
         auto make_row = [&](Widget* parent) {
             Widget* row = new Widget(parent);
             row->setLayout(new BoxLayout(Orientation::Horizontal, Alignment::Middle, 4, 4));
             return row;
         };
 
-        {
-            Widget* row = make_row(win);
-            new Label(row, "Random:", "sans");
-            CheckBox* cb = new CheckBox(row, "");
-            cb->setChecked(p_random);
-            cb->setCallback([this](bool v) { p_random = v; });
-        }
-
-        auto add_int = [&](const std::string& name, int& val, int lo, int hi, int step = 1) {
-            Widget* row = make_row(win);
-            new Label(row, name + ":", "sans");
-            auto* b = new IntBox<int>(row, val);
-            b->setMinValue(lo); b->setMaxValue(hi);
-            b->setValueIncrement(step); b->setEditable(true);
-            b->setCallback([&val](int v) { val = v; });
-        };
-
-        add_int("Cols", p_cols, 3, 80, 1);
-        add_int("Rows", p_rows, 3, 400, 5);
-        add_int("Random", p_nrand, 50, 8000, 50);
-
-        // Physics 
-        new Label(win, "Physics", "sans-bold");
-
-        auto add_dbl = [&](const std::string& name, double& val,
+        // Helper: double spinner
+        auto add_dbl = [&](Widget* panel, const std::string& name, double& val,
             double lo, double hi, double step) {
-                Widget* row = make_row(win);
+                Widget* row = make_row(panel);
                 new Label(row, name + ":", "sans");
                 auto* b = new FloatBox<double>(row, val);
                 b->setMinValue(lo); b->setMaxValue(hi);
@@ -267,29 +257,90 @@ public:
                 b->setCallback([&val](double v) { val = v; });
         };
 
-        add_dbl("Spacing", p_spacing, 2.0, 20.0, 0.5);
-        add_dbl("H", p_h, 4.0, 60.0, 1.0);
-        add_dbl("dt", p_dt, 0.00001, 0.02, 0.001);
-        add_dbl("Gas const", p_gas, 1e3, 1e7, 1e3);
-        add_dbl("Viscosity", p_visc, 1.0, 3000.0, 10.0);
-        add_dbl("Gravity Y", p_gy, -50000.0, 0.0, 500.0);
-        add_dbl("Global damp", p_damp, 0.95, 1.0, 0.001);
+        // Helper: int spinner
+        auto add_int = [&](Widget* panel, const std::string& name, int& val,
+            int lo, int hi, int step = 1) {
+                Widget* row = make_row(panel);
+                new Label(row, name + ":", "sans");
+                auto* b = new IntBox<int>(row, val);
+                b->setMinValue(lo); b->setMaxValue(hi);
+                b->setValueIncrement(step); b->setEditable(true);
+                b->setCallback([&val](int v) { val = v; });
+        };
 
-        // Buttons 
-        Button* br = new Button(win, "Reset  [R]");
+        // ================================================================
+        //  LEFT PANEL — Model parameters
+        // ================================================================
+        Window* left = new Window(this, "Model");
+        left->setPosition(Vector2i(BOX_W + 4, 4));
+        left->setLayout(new GroupLayout());
+
+        new Label(left, "Init", "sans-bold");
+        {
+            Widget* row = make_row(left);
+            new Label(row, "Random:", "sans");
+            CheckBox* cb = new CheckBox(row, "");
+            cb->setChecked(p_random);
+            cb->setCallback([this](bool v) { p_random = v; });
+        }
+        add_int(left, "Cols", p_cols, 3, 1000, 1);
+        add_int(left, "Rows", p_rows, 3, 1000, 5);
+        add_int(left, "RandN", p_nrand, 50, 50000, 100);
+
+        new Label(left, "Physics", "sans-bold");
+        add_dbl(left, "Spacing", p_spacing, 2.0, 20.0, 0.5);
+        add_dbl(left, "H", p_h, 1.0, 60.0, 0.5);
+        add_dbl(left, "dt", p_dt, 0.00001, 0.02, 0.0001);
+        add_dbl(left, "Gas", p_gas, 1e3, 1e7, 1e3);
+        add_dbl(left, "Visc", p_visc, 1.0, 3000.0, 10.0);
+        add_dbl(left, "Grav Y", p_gy, -50000.0, 0.0, 500.0);
+        add_dbl(left, "Damp", p_damp, 0.95, 1.0, 0.001);
+
+        Button* br = new Button(left, "Reset  [R]");
         br->setCallback([this]() { resetSimulation(); });
-
-        Button* bp = new Button(win, "Pause  [Space]");
+        Button* bp = new Button(left, "Pause  [Space]");
         bp->setCallback([this]() { running = !running; });
 
-        // Info 
-        lbl_fps = new Label(win, "FPS: --");
-        lbl_count = new Label(win, "N = 0");
+        lbl_fps = new Label(left, "FPS: --");
+        lbl_count = new Label(left, "N = 0");
 
-        new Label(win, "Mouse", "sans-bold");
-        new Label(win, "RMB: repel", "sans");
-        new Label(win, "LMB: pan", "sans");
-        new Label(win, "Wheel: zoom", "sans");
+        new Label(left, "Mouse", "sans-bold");
+        new Label(left, "RMB: repel", "sans");
+        new Label(left, "LMB: pan", "sans");
+        new Label(left, "Wheel: zoom", "sans");
+
+        // ================================================================
+        //  RIGHT PANEL — Cone obstacle + Metrics
+        // ================================================================
+        Window* right = new Window(this, "Cone / Info");
+        right->setPosition(Vector2i(BOX_W + PANEL_W + 12, 4));
+        right->setLayout(new GroupLayout());
+
+        new Label(right, "Cone Obstacle", "sans-bold");
+        {
+            Widget* row = make_row(right);
+            new Label(row, "Enabled:", "sans");
+            CheckBox* cb = new CheckBox(row, "");
+            cb->setChecked(cone_enable);
+            cb->setCallback([this](bool v) { cone_enable = v; rebuildCone(); });
+        }
+        add_dbl(right, "X %", cone_cx_pct, 0.05, 0.95, 0.05);
+        add_dbl(right, "Y %", cone_ty_pct, 0.05, 0.98, 0.05);
+        add_dbl(right, "HalfW", cone_hw, 5.0, 140.0, 5.0);
+        add_dbl(right, "Height", cone_ht, 10.0, 400.0, 5.0);
+
+        Button* bc = new Button(right, "Rebuild Cone");
+        bc->setCallback([this]() { rebuildCone(); });
+
+        new Label(right, "Live Metrics", "sans-bold");
+        lbl_avg_rho = new Label(right, "Avg density: --");
+        lbl_avg_nb = new Label(right, "Avg neighbours: --");
+        lbl_max_vel = new Label(right, "Max velocity: --");
+
+        new Label(right, "Limits", "sans-bold");
+        new Label(right, "~5k  @60fps smooth", "sans");
+        new Label(right, "~15k @30fps OK", "sans");
+        new Label(right, "~30k+ gets heavy", "sans");
 
         performLayout();
         resetSimulation();
@@ -319,7 +370,7 @@ public:
         if (p_random) {
             std::uniform_real_distribution<double> rx(xlo, xhi);
             std::uniform_real_distribution<double> ry(ylo, yhi);
-            const int    target = std::clamp(p_nrand, 50, 8000);
+            const int    target = std::clamp(p_nrand, 50, 50000);
             const double mind2 = 0.81 * p_spacing * p_spacing;
             const int    maxtry = target * 30;
             int tries = 0;
@@ -337,9 +388,9 @@ public:
         else {
             std::uniform_real_distribution<double> jit(
                 -0.08 * p_spacing, +0.08 * p_spacing);
-            const int cols = std::clamp(p_cols, 3, 80);
-            const int rows = std::clamp(p_rows, 3, 400);
-            const double sx = 10 /*(BOX_W - cols * p_spacing) / 2.0*/;
+            const int cols = std::clamp(p_cols, 3, 1000);
+            const int rows = std::clamp(p_rows, 3, 1000);
+            const double sx = (BOX_W - cols * p_spacing) / 2.0;
             const double sy = ylo + p_spacing;
             for (int r = 0; r < rows; ++r)
                 for (int c = 0; c < cols; ++c) {
@@ -350,31 +401,35 @@ public:
                 }
         }
 
-        // Reset accumulator so we don't fire a burst of steps after reset
         accum = 0.0;
         t_init = false;
 
-        // Build cone obstacle: centred horizontally, apex pointing UP,
-        // hanging from near the top of the box so fluid splits around it.
-        // half_width=55, height=90 gives a 60-degree opening angle.
-        // Stiffness tuned to match the fluid pressure scale (gas * REST_DENS).
-        cone.build(
-            BOX_W * 0.5,                    // cx
-            BOX_H * 0.82,                   // tip y  (apex — top point, near ceiling)
-            55.0,                            // half-width
-            90.0,                            // height  (base extends down from apex)
-            p_gas * REST_DENS * 0.8          // stiffness ~ fluid pressure scale
-        );
+        rebuildCone();
 
         if (lbl_count) {
             std::string mode = p_random ? " (random)"
-                : " (grid " + std::to_string(std::clamp(p_cols, 3, 80))
-                + "x" + std::to_string(std::clamp(p_rows, 3, 300)) + ")";
+                : " (grid " + std::to_string(std::clamp(p_cols, 3, 120))
+                + "x" + std::to_string(std::clamp(p_rows, 3, 800)) + ")";
             lbl_count->setCaption("N = " + std::to_string(particles.size()) + mode);
         }
         std::cout << "Reset: " << particles.size()
             << " particles  H=" << p_h
             << "  mass=" << p_mass << "\n";
+    }
+
+    void rebuildCone() {
+        if (cone_enable) {
+            cone.build(
+                BOX_W * cone_cx_pct,
+                BOX_H * cone_ty_pct,
+                cone_hw,
+                cone_ht,
+                p_gas * REST_DENS * 0.8
+            );
+        }
+        else {
+            cone.build(-9999.0, -9999.0, 0.1, 0.1, 0.0);
+        }
     }
 
     // Keyboard
@@ -469,8 +524,10 @@ public:
 private:
 
     V2 screenToWorld(const Vector2i& sp) const {
-        double wx = (sp.x() - mSize.x() * 0.5) / zoom + mSize.x() * 0.5 - off_x;
-        double wy = (sp.y() - mSize.y() * 0.5) / zoom + mSize.y() * 0.5 + off_y;
+        const float box_cx = BOX_W * 0.5f;
+        const float box_cy = BOX_H * 0.5f;
+        double wx = (sp.x() - box_cx) / zoom + box_cx - off_x;
+        double wy = (sp.y() - box_cy) / zoom + box_cy + off_y;
         return { wx, BOX_H - wy };
     }
 
@@ -514,11 +571,13 @@ private:
         NVGcontext* vg = mNVGContext;
         nvgBeginFrame(vg, mSize.x(), mSize.y(), 1.0f);
 
-        // Camera transform
-        nvgTranslate(vg, mSize.x() * 0.5f, mSize.y() * 0.5f);
+        // Camera transform — centre zoom on the BOX area (left side of window)
+        const float box_cx = BOX_W * 0.5f;
+        const float box_cy = BOX_H * 0.5f;
+        nvgTranslate(vg, box_cx, box_cy);
         nvgScale(vg, zoom, zoom);
-        nvgTranslate(vg, -mSize.x() * 0.5f + off_x,
-            -mSize.y() * 0.5f - off_y);
+        nvgTranslate(vg, -box_cx + off_x,
+            -box_cy - off_y);
 
         // Background
         nvgBeginPath(vg);
@@ -533,8 +592,8 @@ private:
         nvgStrokeWidth(vg, 1.5f / zoom);
         nvgStroke(vg);
 
-        // Cone obstacle (drawn before particles so fluid appears to flow over it)
-        //cone.draw(vg);
+        // Cone obstacle
+        if (cone_enable) cone.draw(vg);
 
         // Particle visual radius: H×0.45 so neighbours overlap → fluid blob
         const float vr = (float)(p_h * 0.45);
@@ -573,7 +632,26 @@ private:
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
         nvgText(vg, 10, 10, "SPH 2D  |  SPACE=Pause  R=Reset  ESC=Exit", nullptr);
         nvgText(vg, 10, 26, "RMB=repel  LMB=pan  Wheel=zoom", nullptr);
-        nvgText(vg, 10, 42, "Colour: black=isolated  blue=edge  cyan=interior  white=dense", nullptr);
+
+        // Update live metrics (every frame, cheap for display)
+        {
+            const int N = (int)particles.size();
+            if (N > 0) {
+                double sum_rho = 0, sum_nb = 0, mx_vel = 0;
+                for (const auto& pt : particles) {
+                    sum_rho += pt.rho;
+                    sum_nb += pt.neighbours;
+                    double v = pt.vel.mag();
+                    if (v > mx_vel) mx_vel = v;
+                }
+                if (lbl_avg_rho)
+                    lbl_avg_rho->setCaption("Avg density: " + std::to_string((int)(sum_rho / N)));
+                if (lbl_avg_nb)
+                    lbl_avg_nb->setCaption("Avg neighbours: " + std::to_string((int)(sum_nb / N)));
+                if (lbl_max_vel)
+                    lbl_max_vel->setCaption("Max vel: " + std::to_string((int)mx_vel));
+            }
+        }
 
         nvgEndFrame(vg);
     }
@@ -730,7 +808,7 @@ private:
             });
 
         // Integrate + boundaries (serial — each particle independent) 
-        //const double cone_stiff = p_gas * REST_DENS * 0.8;
+        const double cone_stiff = p_gas * REST_DENS * 0.8;
 
         for (auto& p : particles) {
             V2 accel = p.force / p.rho;
@@ -744,7 +822,7 @@ private:
             }
 
             // Cone penalty force
-            /*{
+            if (cone_enable) {
                 V2 push_n; double depth;
                 if (cone.collide(p.pos, push_n, depth)) {
                     accel += push_n * (cone_stiff * depth / p.rho);
@@ -754,7 +832,7 @@ private:
                         p.vel.y += push_n.y * vn * (1.0 + WALL_DAMP);
                     }
                 }
-            }*/
+            }
 
             p.vel += accel * dt;
             p.vel *= damp;
